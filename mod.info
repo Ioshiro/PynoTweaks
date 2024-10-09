@@ -3,4 +3,4 @@ poster=poster.png
 id=Pyno Tweaks
 description=
 url=
-require=lua_server_commands
+require=lua_commands

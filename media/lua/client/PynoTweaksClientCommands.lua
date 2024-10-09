@@ -1,4 +1,18 @@
 require("survivalRewards")
+-- local characterManagement = {}
+local pageBook = {}
+local timedBook = {}
+-- local activityCalendar = {}
+local playerBkp = {}
+if getActivatedMods():contains("Erase&Rewind_RPGbyVorshim") then
+-- characterManagement = require('character/CharacterManagement')
+pageBook = require('book/PageBook')
+-- timedBook = require('book/TimedBook')
+-- activityCalendar = require('lib/ActivityCalendar')
+    if getActivatedMods():contains("Erase&Rewind_BKP") then
+        playerBkp = require('CharacterPlayer')
+    end
+end
 
 -- gestione dei comandi ricevuti dal server
 local function OnServerCommand(module, command, arguments)
@@ -55,121 +69,7 @@ local function OnServerCommand(module, command, arguments)
             elseif addOrComplete == "backup" then
                 SF_MissionPanel:forceBackupData()
             elseif addOrComplete == "remove" then
-                local currentTasks = player:getModData().missionProgress.Category2
-                local done = false
-                if #currentTasks > 0 then
-                    for i = #currentTasks, 1, -1 do
-                        if currentTasks[i].guid == questID then
-                            local task = currentTasks[i]
-                            if task then
-                                -- rimozione di eventuali clickevent degli obiettivi (se presenti)
-                                if task.objectives and #task.objectives > 0 then
-                                    for k=1,#task.objectives do
-                                        if task.objectives[k].oncompleted then
-                                            local oncompletedTable = luautils.split(task.objectives[k].oncompleted, ";");
-                                            local removeClickEventValue = nil
-                                            for j = 1, #oncompletedTable do
-                                                if oncompletedTable[j] == "clickevent" then
-                                                    removeClickEventValue = oncompletedTable[j + 2]
-                                                    for c=1,#player:getModData().missionProgress.ClickEvent do
-                                                        local event = player:getModData().missionProgress.ClickEvent[c];
-                                                        if event.address and event.address == removeClickEventValue then
-                                                            table.remove(player:getModData().missionProgress.ClickEvent, c);
-                                                            break;
-                                                        end
-                                                    end
-                                                end
-                                            end
-                                        end
-                                    end
-                                end
-                                if task.unlocks then
-                                    local convertedcondition = task.unlocks:gsub(":", ";");
-                                    local unlocksTable = luautils.split(convertedcondition, ";");
-                                    if #unlocksTable > 0 then
-                                        for j = 1, #unlocksTable do
-                                            if unlocksTable[j] == "killzombies" then
-                                                if #player:getModData().missionProgress.ActionEvent > 0 then 
-                                                    for k, v in pairs(player:getModData().missionProgress.ActionEvent) do
-                                                        local commands = luautils.split(v.commands, ";");
-                                                        for g = 1, #commands do
-                                                            if commands[g] == task.guid then                                                          
-                                                                table.remove(player:getModData().missionProgress.ActionEvent, k);
-                                                                break;
-                                                            end
-                                                        end
-                                                    end
-                                                end
-                                            end
-                                            if unlocksTable[j] == "unlockworldevent" then
-                                                print(unlocksTable[j] .. " ESISTE")
-                                                local condition = unlocksTable[j+2]
-                                                print(condition)
-                                                if player:getModData().missionProgress.WorldEvent then
-                                                    print("mission progress exist")
-                                                    for k, v in pairs(player:getModData().missionProgress.WorldEvent) do
-                                                        print(v.dialoguecode)
-                                                        if v.dialoguecode == condition then
-                                                            print("removing")
-                                                            player:getModData().missionProgress.WorldEvent[k] = nil
-                                                            -- table.remove(player:getModData().missionProgress.WorldEvent, k);
-                                                            break;
-                                                        end
-                                                    end
-                                                end
-                                            end
-                                            if unlocksTable[j] == "clickevent" then
-                                                removeClickEventValue = unlocksTable[j + 2]
-                                                for c=1,#player:getModData().missionProgress.ClickEvent do
-                                                    local event = player:getModData().missionProgress.ClickEvent[c];
-                                                    if event.address and event.address == removeClickEventValue then
-                                                        table.remove(player:getModData().missionProgress.ClickEvent, c);
-                                                        break;
-                                                    end
-                                                end
-                                            end
-                                        end
-                                    end
-                                end
-                                if task.onobtained then
-                                    local onObtainedTable = luautils.split(task.onobtained, ";");
-                                    if #onObtainedTable > 0 then
-                                        for j = 1, #onObtainedTable do
-                                            if onObtainedTable[j] == "unlockworldevent" then
-                                                print(onObtainedTable[j] .. " ESISTE")
-                                                local condition = onObtainedTable[j+2]
-                                                print(condition)
-                                                if player:getModData().missionProgress.WorldEvent then
-                                                    print("mission progress exist")
-                                                    for k, v in pairs(player:getModData().missionProgress.WorldEvent) do
-                                                        print(v.dialoguecode)
-                                                        if v.dialoguecode == condition then
-                                                            print("removing")
-                                                            player:getModData().missionProgress.WorldEvent[k] = nil
-                                                            -- table.remove(player:getModData().missionProgress.WorldEvent, k);
-                                                            break;
-                                                        end
-                                                    end
-                                                end
-                                            end
-                                        end
-                                    end
-                                end
-                                -- check sullo status della quest, se COMPLETED viene spostato nella categoria 1
-                                if task.status == "Completed" then
-                                    table.insert(player:getModData().missionProgress.Category1, task);
-                                end
-                                -- rimozione coatta dalle quest attive xD
-                                table.remove(player:getModData().missionProgress.Category2, i);
-                                done = true;
-                            end
-                        end
-                    end
-                end   
-                if done then
-                SF_MissionPanel.instance.needsUpdate = true
-                SF_MissionPanel.instance.needsBackup = true;
-                end
+                SF_MissionPanel.Commands.removequest(questID)
             end
 
             player:Say("Missione aggiornata!")
@@ -198,7 +98,13 @@ local function OnServerCommand(module, command, arguments)
             local player = getPlayerByOnlineID(steamID)
             command = arguments.command
             if command == "rerolldaily" then
-                SF_MissionPanel.instance.DailyEventReroll()
+                SF_MissionPanel.instance.DailyEventReroll() --Expanded
+
+            elseif command == "loadbackup" then
+                local flag = arguments.checkDefaults
+                if flag then
+                    sendClientCommand(player, 'SFQuest', 'sendData', {id = arguments.id})
+                end
             elseif command == "lincolnreed" then
                 local factions = player:getModData().missionProgress.Factions
                 table.insert(factions, {factioncode = "LincolnReed", name = "IGUI_SFQuest_LincolnReed_Name", reputation = 99, repmax = 100, tierlevel = 3, tiername = "IGUI_SFQuest_Questyno_LincolnReed_Tier3", tiercolor = "green", itemindex = 41, height = 36, index = 41})
@@ -217,6 +123,63 @@ local function OnServerCommand(module, command, arguments)
                 player:getModData().missionProgress.DailyEvent = dailyEvents
                 SF_MissionPanel.instance.needsUpdate = true
                 SF_MissionPanel.instance.needsBackup = true
+            end
+        elseif command == "libryno" then
+            local steamID = arguments.steamID
+            local player = getPlayerByOnlineID(steamID)
+            print("command " .. arguments.command .. " steamID " .. steamID .. " player " .. player:getUsername())
+            local bookType = arguments.bookType
+            print("bookType: " .. tostring(bookType))
+
+            local modData_Table = nil
+            local modData_Name = arguments.modDataName
+            if bookType == "READ_ONCE_BOOK" then
+                modData_Table = pageBook.ReadOnceBook
+            elseif bookType == "TIMED_BOOK" then
+                modData_Table = pageBook.TimedBook
+            elseif bookType == "BKP_MOD_1" then
+                modData_Table = playerBkp.BKP_1
+            elseif bookType == "BKP_MOD_2" then
+                modData_Table = playerBkp.BKP_2
+            else
+                print("Errore: modData_Table non riconosciuto - " .. tostring(bookType))
+                return
+            end
+
+            local subCommand = arguments.command
+            if subCommand == "delete" or subCommand == "remove" then
+                local message = nil
+                if arguments.done then
+                    message = "Il backup " .. bookType .. " è stato cancellato per il player " .. player:getUsername()
+                elseif not arguments.done then
+                    message = "Il libro non esiste " .. bookType .. " per il player " .. player:getUsername()
+                end
+                getPlayer():Say(message)
+
+            elseif subCommand == "restore" then
+                -- characterManagement.requestBackupData(modData_Name)
+                if arguments.done then
+                    getPlayer():Say("Il backup " .. bookType .. " è stato ripristinato per il player " .. player:getUsername())
+                else
+                    getPlayer():Say("Il libro  " .. bookType .. " non è stato ripristinato per il player " .. player:getUsername())
+                end
+            elseif subCommand == "backup" then
+                -- characterManagement.writeBook(player, modData_Table, modData_Name)
+            if arguments.success then
+                getPlayer():Say("Il backup " .. bookType .. " è stato salvato per il player " .. player:getUsername())
+            else 
+                getPlayer():Say("Il libro  " .. bookType .. " non è stato salvato per il player " .. player:getUsername())
+            end
+            elseif subCommand == "check" then
+                local message = nil
+                if arguments.exists then
+                    message = "Il backup " .. bookType .. " esiste per il player " .. player:getUsername()
+                elseif not arguments.exists then
+                    message = "Il libro non esiste " .. bookType .. " per il player " .. player:getUsername()
+                end
+                getPlayer():Say(message)
+            else
+                print("Errore: comando non riconosciuto - " .. tostring(subCommand))
             end
         end
     end

@@ -1,4 +1,5 @@
 IG_UI_IT = {
 	IGUI_NoDisassemblingAllowed = "Non è permesso disassemblare i container, boiade!",
 	IGUI_ItemCat_PynoTweaks = "Sostanza Drogante",
+	IGUI_Recipe_NoHungerFood = "Questo ingrediente non è più utilizzabile, meglio sbarazzarsene.",
 }

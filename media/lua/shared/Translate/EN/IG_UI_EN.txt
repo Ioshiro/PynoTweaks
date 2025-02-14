@@ -2,4 +2,5 @@ IG_UI_EN = {
 	IGUI_NoDisassemblingAllowed = "Disassembling Containers is not allowed!",
 	IGUI_VehicleRecycling_ConfirmDialog_Vehicle = "Do you really want to dismantle this vehicle?",
 	IGUI_VehicleRecycling_ConfirmDialog_Trailer = "Do you really want to dismantle this trailer?",
+	IGUI_Recipe_NoHungerFood = "This ingredient is no longer usable, better get rid of it.",
 }
